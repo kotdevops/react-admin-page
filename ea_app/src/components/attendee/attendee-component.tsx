@@ -9,7 +9,7 @@ import {setAttendees, setEventTags} from "../../store/data/actions";
 import {callMethod, toggleDrawer} from "../../store/view/actions";
 
 import {
-    Form, Input, InputNumber, Popconfirm, Spin, 
+    Form, Input, InputNumber, Popconfirm, Spin, Tooltip, 
     Table, Tag, Popover, message, Icon, Select, Button, DatePicker
 } from 'antd';
 import Highlighter from 'react-highlight-words';
@@ -28,6 +28,8 @@ import moment from 'moment';
 // import EditableFormTable from './expandable-editable-table';
 import EditableFormTable from './dropdown-paremt-item';
 import { RestaurantRounded } from '@material-ui/icons';
+import { StringGradients } from 'antd/lib/progress/progress';
+import { update } from 'lodash';
 
 const { Option } = Select;
 
@@ -135,6 +137,7 @@ export interface Attendee {
     email: string;
     birth: string;
     death: string;
+    spouse: string;
     attendeeTags: EventTag[];
     parent: any[];
     createParentMode: boolean;
@@ -147,6 +150,7 @@ interface newAttendee {
     gender?: string;
     birth?: string;
     death?: string;
+    spouse?: string;
 }
 
 export interface Columns {
@@ -161,6 +165,7 @@ export interface Columns {
     filters?: any[];
     width?: number;
     fixed?: any;
+    onFilter?: (value:any, record:any) => any; 
 }
 
 type State = Readonly<{
@@ -176,10 +181,15 @@ type State = Readonly<{
     searchedColumn: string;
     submitFatherID: string;
     submitMotherID: string;
+    submitSpouse: string;
     newCreateBirth: string;
     newCreaetDeath: string;
     newCreateGender: string;
+    newCreateSpouse: string;
     expandedRowKeys: any[];
+    cntLang: string;
+    index: number;
+    resetBtnDisplay: string;
 }>;
 
 declare module 'react' {
@@ -209,6 +219,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 gender: '',
                 birth: '',
                 death: '',
+                spouse: '',
                 attendeeTags: [{
                     tagID: '',
                     tagName: ''
@@ -230,10 +241,15 @@ class AttendeeComponent extends PureComponent<Props, State> {
             searchedColumn: '',
             submitFatherID: '',
             submitMotherID: '',
+            submitSpouse: '',
             newCreateBirth: '',
             newCreaetDeath: '',
+            newCreateSpouse: '',
             newCreateGender: 'M',
             expandedRowKeys: [],
+            cntLang: 'en',
+            index: 0,
+            resetBtnDisplay: 'none',
         };
     }
 
@@ -291,7 +307,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     "type": "node--attendee",
                     "id": fatherID,
                     "meta": {
-                    "tid": 497
+                        "tid": 497
                     }
                 }
             )
@@ -302,12 +318,25 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     "type": "node--attendee",
                     "id": motherID,
                     "meta": {
-                    "tid": 497
+                        "tid": 497
                     }
                 }
             )
         }
-        console.log("parentData", parentData);
+        let spouseData:any[] = [];
+        if(this.state.submitSpouse !== "") {
+            spouseData.push(
+                {
+                    "type": "node--attendee",
+                    "id": this.state.submitSpouse,
+                    "meta": {
+                        "tid": 498
+                    }
+                }
+            )
+        }
+        console.log("parent && spouse\n", parentData, this.state.submitSpouse);
+        // return;
         let modifiedNewAttendee:any = {
             "field_first_name": newAttendee.field_first_name,
             "field_full_name": newAttendee.field_full_name,
@@ -336,6 +365,9 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     "relationships": {
                         "field_parents": {
                             "data": parentData
+                        },
+                        "field_spouses": {
+                            "data": spouseData
                         }
                     }
                 }
@@ -359,7 +391,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                                     fname: originData[j].firstName,
                                     gender: originData[j].gender,
                                     id: id,
-                                    lname: originData[j].lastName
+                                    lname: originData[j].lastName,
                                 }
                                 newParent.push(newParentItem);
                             }
@@ -652,6 +684,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 gender: attendeeName.attributes.gender,
                 birth: attendeeName.attributes.birth,
                 death: attendeeName.attributes.death,
+                spouse: attendeeName.attributes.spouse,
                 id: attendeeName.attributes.id,
                 attendeeTags: tags,
                 parent: attendeeName.attributes.parent,
@@ -676,6 +709,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
             gender: intl.get('#ENTER_GENDER#'),
             birth: intl.get('#ENTER_BIRTH#'),
             death: intl.get('#DEATH#'),
+            spouse: "",
             attendeeTags: [],
             parent: [],
             createParentMode: false
@@ -691,6 +725,14 @@ class AttendeeComponent extends PureComponent<Props, State> {
 
     componentDidMount(): void {
         this.setDataSource();
+        let cntLang = window.localStorage.getItem("cntLang") || "en";
+        this.setState({cntLang: cntLang});
+    }
+
+    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot ?: any): void {
+        if (this.props.data.attendees !== prevProps.data.attendees) {
+            this.setDataSource();
+        }
         const elements = document.getElementsByClassName("ant-table-hide-scrollbar");
         const element = elements[0] as HTMLElement;
         if(element) {
@@ -704,19 +746,10 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 svg.style.color = "white";
             }
         }
-    }
-
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot ?: any): void {
-        if (this.props.data.attendees !== prevProps.data.attendees) {
-            this.setDataSource();
-        }
     }    
 
     handleTableChange = (pagination:any, filters:any, sorter:any) => {
-        // console.log("pagination", pagination);
-        // console.log("sorter", sorter);
-        // console.log("filters", filters, this.state.originDataSource);
-        // console.log("handleTableChange", this.state.originDataSource);
+        console.log("OnChangeTable", pagination, filters, sorter);
         let data:any[] = this.state.originDataSource, newData:any[] = [];
         if(filters.gender && filters.gender.length) {            
             for (let i = 0; i < filters.gender.length; i++) {
@@ -762,6 +795,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
             }
         });        
     }
+    
 
     onChangeSearch = (value:any) => {
         let data:any[] = this.state.originDataSource, newData:any[] = [];
@@ -807,7 +841,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
             >
               Search
             </Button>
-            <Button onClick={() => this.handleReset(clearFilters)} size="small" style={{ width: 90 }}>
+            <Button onClick={() => this.
+                handleReset(clearFilters)} size="small" style={{ width: 90 }}>
               Reset
             </Button>
           </div>
@@ -843,6 +878,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
         this.setState({
           searchText: selectedKeys[0],
           searchedColumn: dataIndex,
+          resetBtnDisplay: 'block',
         });
     };
 
@@ -850,6 +886,16 @@ class AttendeeComponent extends PureComponent<Props, State> {
         clearFilters();
         this.setState({ searchText: '' });
     };
+
+    resetAllChange = () => {
+        // clearFilters();
+        console.log("reset here");
+        let indexs = ['birth', 'death', 'firstName', 'lastName', 'email'];
+        this.setState({ 
+            index: this.state.index + 1,
+            resetBtnDisplay: 'none'
+         });
+    }
 
     onDatePickerBirth = (date:any, dateString:any) => {
         let data = this.state.dataSource, index = parseInt(this.state.editingRow);
@@ -872,6 +918,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
     }
 
     onGenderChange = (value:string) => {
+        console.log("OnGenderChange", value);
         let data = this.state.dataSource, index = parseInt(this.state.editingRow);
         if(index>-1) {
             data[index].gender = value;
@@ -887,6 +934,10 @@ class AttendeeComponent extends PureComponent<Props, State> {
     
     updateSubmitMotherID = (id:string) => {
         this.setState({submitMotherID: id});
+    }
+
+    updateSubmitSpouse = (value:string) => {
+        this.setState({submitSpouse: value});
     }
 
     onExpandRow = (expanded:boolean, record:any) => {
@@ -978,8 +1029,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 },
             },
             {
-                // title: intl.get('FIRST_NAME'),
-                title: "First Name",
+                title: intl.get('FIRST_NAME'),
+                // title: "First Name",
                 dataIndex: 'firstName',
                 key: 'firstName',
                 editable: true,
@@ -992,8 +1043,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 ...this.getColumnSearchProps('firstName'),
             },
             {
-                // title: intl.get('LAST_NAME'),
-                title: "Last Name",
+                title: intl.get('LAST_NAME'),
+                // title: "Last Name",
                 dataIndex: 'lastName',
                 key: 'lastName',
                 editable: true,
@@ -1017,6 +1068,10 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     { text: 'Male', value: 'M' },
                     { text: 'Female', value: 'F' },
                 ],
+                // onFilter: (value, record) => {
+                //     console.log("onFilter", value, record);
+                //     return true;
+                // },
                 render: (text:any, record:any) => {
                     const {editingRow} = this.state;
                     return editingRow === record.key ? (
@@ -1033,6 +1088,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 title: intl.get('BIRTH'),
                 dataIndex: 'birth',
                 key: 'birth',
+                width: 110,
                 // editable: true,                
                 defaultSortOrder: 'ascend',
                 sorter: (a, b) => {
@@ -1051,7 +1107,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
                                 defaultValue={moment(`${text}`, 'YYYY-MM-DD')}
                             />
                         ) : (
-                            <div>{text}</div>
+                            (this.state.cntLang === "en") ? (<div>{text.split("-")[1] + "/" + text.split("-")[2] + "/" + text.split("-")[0]}</div>) : 
+                            (<div>{text.split("-")[2] + "/" + text.split("-")[1] + "/" + text.split("-")[0]}</div>)
                         );
                     }
                     return editingRow === record.key ? (                        
@@ -1067,6 +1124,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 title: intl.get('DEATH'),
                 dataIndex: 'death',
                 key: 'death',
+                width: 110,
                 // editable: true,
                 defaultSortOrder: 'ascend',
                 sorter: (a, b) => {
@@ -1085,7 +1143,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
                                 defaultValue={moment(`${text}`, 'YYYY-MM-DD')}
                             />
                         ) : (
-                            <div>{text}</div>
+                            (this.state.cntLang === "en") ? (<div>{text.split("-")[1] + "/" + text.split("-")[2] + "/" + text.split("-")[0]}</div>) : 
+                            (<div>{text.split("-")[2] + "/" + text.split("-")[1] + "/" + text.split("-")[0]}</div>)
                         );
                     }
                     return editingRow === record.key ? (
@@ -1219,7 +1278,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
         });
         
         const expandedRowRender = (record:any, index:any, indent:any, expanded:any) => {
-            console.log("expandableRowRender", record, index, indent, expanded);
+            // console.log("expandableRowRender", record, index, indent, expanded);
             return (
                 <EditableFormTable 
                     // propsData={dataSource}
@@ -1231,6 +1290,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     rootRecord={record.key}
                     updateFatherID={this.updateSubmitFatherID}
                     updateMotherID={this.updateSubmitMotherID}
+                    updateSpouse={this.updateSubmitSpouse}
                 />
             );
         };
@@ -1251,6 +1311,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                             />
                         </div> */}
                         <Table<Attendee>
+                            key={this.state.index}
                             components={components}
                             bordered
                             dataSource={this.state.dataSource}
@@ -1263,11 +1324,6 @@ class AttendeeComponent extends PureComponent<Props, State> {
                             pagination={this.state.pagination}
                             onChange={this.handleTableChange}
                             expandedRowRender={expandedRowRender}
-                            // defaultExpandAllRows={false}
-                            // defaultExpandedRowKeys={[1]}
-                            // expandedRowKeys={this.state.expandedRowKeys}
-                            // onExpand={this.onExpandRow}
-                            // onExpandedRowsChange={(expandedRows)=>{console.log("expandedRows", expandedRows)}}
                             scroll={{ y: 600 }}
                             id="parent-table"
                         />
@@ -1278,6 +1334,9 @@ class AttendeeComponent extends PureComponent<Props, State> {
                                 <Option value="50">50 / page</Option>
                                 <Option value="100">100 / page</Option>
                             </Select>
+                        </div>
+                        <div style={{textAlign: "left", marginTop: "-32px", display: this.state.resetBtnDisplay}}>
+                            <Button onClick={this.resetAllChange}>Reset All</Button>
                         </div>
                     </EditableContext.Provider>
                     <DrawerTagsComponent/>

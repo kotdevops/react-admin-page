@@ -85,6 +85,7 @@ interface OwnProps extends FormComponentProps {
   rootRecord: string;
   updateFatherID(id: string): void;
   updateMotherID(id: string): void;
+  updateSpouse(value: string): void;
   callMethod(method: string): void;
 }
 
@@ -104,6 +105,9 @@ type State = Readonly<{
   willSubmitData: any;
   fatherValue: string;
   motherValue: string;
+  spouse: string;
+  spouseInfos: any[];
+  spouseIDs: any[];
 }>;
 
 declare module 'react' {
@@ -127,6 +131,7 @@ class EditableTable extends PureComponent<Props, State> {
                 key: 1,
                 father: "",
                 mother: "",
+                spouse: "",
             },
         ], 
         pntInfos: [],
@@ -136,6 +141,9 @@ class EditableTable extends PureComponent<Props, State> {
         motherIDs: [],
         fatherValue: "",
         motherValue: "",
+        spouse: "",
+        spouseInfos: [],
+        spouseIDs: [],
         totalDataSource: [],
         willSubmitData: {
             rootData: props.currentData,
@@ -147,6 +155,7 @@ class EditableTable extends PureComponent<Props, State> {
 
   componentDidMount() {
     let currentRootData = this.state.willSubmitData;
+    console.log("currentRootData", currentRootData);
     if(currentRootData.rootData.parent.length) {
         for (let i = 0; i < currentRootData.rootData.parent.length; i++) {
             let item = currentRootData.rootData.parent[i];
@@ -175,10 +184,17 @@ class EditableTable extends PureComponent<Props, State> {
                 });
             }
         }
-    }
+    }    
     let pntInfosData:any[] = [];
     let dataSource:any[] = this.props.propsData;
-    // console.log("propsdata", dataSource);
+    console.log("propsdata", dataSource);
+    if(currentRootData.rootData.spouse) {
+      for(let i = 0; i < dataSource.length; i++) {
+        if(currentRootData.rootData.spouse === dataSource[i].id) {
+          this.setState({spouse: dataSource[i].firstName + " " + dataSource[i].lastName + " (" + dataSource[i].birth + ")"})
+        }
+      }
+    }
     for(let i = 1; i <= dataSource.length; i++) {
         pntInfosData.push(i + ": " + dataSource[i-1].firstName + " " + dataSource[i-1].lastName + " (" + dataSource[i-1].birth + ")");
     }
@@ -198,12 +214,32 @@ class EditableTable extends PureComponent<Props, State> {
         motherIDsData.push(dataSource[i-1].id);
       }      
     }
+    let spouseInfos:any[] = [], spouseIDs:any[] = [];
+    if(currentRootData.rootData.gender === "F") {
+      for(let i = 1; i <= dataSource.length; i++) {
+        if (dataSource[i-1].gender === "M") {
+          let j = spouseInfos.length + 1;
+          spouseInfos.push(j + ": " + dataSource[i-1].firstName + " " + dataSource[i-1].lastName + " (" + dataSource[i-1].birth + ")");
+          spouseIDs.push(dataSource[i-1].id);
+        }
+      }
+    } else {
+      for(let i = 1; i <= dataSource.length; i++) {
+        if (dataSource[i-1].gender === "F") {
+          let j = spouseInfos.length + 1;
+          spouseInfos.push(j + ": " + dataSource[i-1].firstName + " " + dataSource[i-1].lastName + " (" + dataSource[i-1].birth + ")");
+          spouseIDs.push(dataSource[i-1].id);
+        }
+      }
+    }
     this.setState({
       pntInfos: pntInfosData,
       fatherInfos: fatherInfosData,
       fatherIDs: fatherIDsData,
       motherInfos: motherInfosData,
       motherIDs: motherIDsData,
+      spouseInfos: spouseInfos,
+      spouseIDs: spouseIDs,
       totalDataSource: dataSource
     });
   }
@@ -253,7 +289,14 @@ class EditableTable extends PureComponent<Props, State> {
         },
         motherValue: value,
     });
-  }  
+  }
+
+  onSelectSpouse = (value: any, option: any) => {
+    let index = parseInt(value.split(":")[0])-1;
+    let id = this.state.spouseIDs[index];
+    this.props.updateSpouse(id);
+    this.setState({spouse: value});
+  }
 
   onChangeSelectMother = (value:any) => {
     let willSubmitData = this.state.willSubmitData;
@@ -270,72 +313,12 @@ class EditableTable extends PureComponent<Props, State> {
     this.setState({motherValue: value})
   }
 
-//   submitData = () => {
-//       console.log("submitData", this.state.willSubmitData);
-//       this.updateAttendees(this.state.willSubmitData)
-//   }
-
-  // submitData = (): void => {
-  //   console.log("submitData", this.state.willSubmitData);
-  //   let data = this.state.willSubmitData;
-  //   let parentData:any[] = [];
-  //   if(data.fatherID !== "") {
-  //       parentData.push({
-  //           "type": "node--attendee",
-  //           "id": data.fatherID,
-  //           "meta": {
-  //             "tid": 497
-  //           }
-  //       })
-  //   }
-  //   if(data.motherID !== "") {
-  //       parentData.push({
-  //           "type": "node--attendee",
-  //           "id": data.motherID,
-  //           "meta": {
-  //             "tid": 497
-  //           }
-  //       })
-  //   }
-  //   let attributes:any = {
-  //       "field_first_name": data.rootData.firstName,
-  //       "field_full_name": data.rootData.firstName + " " + data.rootData.lastName,
-  //       "field_last_name": data.rootData.lastName,
-  //       "field_gender": data.rootData.gender,
-  //       "field_birth": data.rootData.birth,
-  //       "field_death": data.rootData.death
-  //   }
-  //   axios({
-  //       method: 'patch',
-  //       url: `${prodURL}/jsonapi/node/attendee/${data.rootData.id}`,
-  //       auth: {
-  //           username: `${fetchUsername}`,
-  //           password: `${fetchPassword}`
-  //       },
-  //       headers: {
-  //           'Accept': 'application/vnd.api+json',
-  //           'Content-Type': 'application/vnd.api+json',
-  //           'X-CSRF-Token': this.props.XCSRFtoken
-  //       },
-  //       data: {
-  //           "data": {
-  //               "type": "node--attendee",
-  //               "id": data.rootData.id,
-  //               "attributes": attributes,
-  //               "relationships": {
-  //                   "field_parents": {
-  //                       "data": parentData
-  //                   }
-  //               }
-  //           }
-  //       }
-  //   })
-  //       .then(res => {
-  //           this.props.callMethod('fetchAttendees');
-  //           // window.location.reload();
-  //       })
-  //       .catch(catchError);
-  // };
+  onChangeSelectSpouse = (value:any) => {
+    this.setState({spouse: value});
+    if(!value.length) {
+      this.props.updateSpouse("");
+    }    
+  }
 
   render() {
     const components:any = {
@@ -343,10 +326,10 @@ class EditableTable extends PureComponent<Props, State> {
         cell: EditableCell,
       },
     };
-
+    const cntLang = window.localStorage.getItem("cntLang") || "en";
     const columns_cus:any[] = [
       { 
-        title: "Father", 
+        title: (cntLang === "en") ? "Father" : "Père", 
         dataIndex: 'father',
         key: 'father',
         render: (text:any, record:any) => {
@@ -370,7 +353,7 @@ class EditableTable extends PureComponent<Props, State> {
         },
       },
       { 
-        title: "Mother", 
+        title: (cntLang === "en") ? "Mother" : "Mère", 
         dataIndex: 'mother',
         key: 'mother',
         render: (text:any, record:any) => {
@@ -392,15 +375,29 @@ class EditableTable extends PureComponent<Props, State> {
           );
         },
       },
-      // {
-      //   title: "Action",
-      //   dataIndex: 'operation',
-      //   render: () => {
-      //       return(
-      //           <div style={{cursor: "pointor"}} onClick={this.submitData}>Save</div>
-      //       )
-      //   }
-      // }
+      { 
+        title: (cntLang === "en") ? "Spouse" : "Epoux", 
+        dataIndex: 'spouse',
+        key: 'spouse',
+        render: (text:any, record:any) => {
+          const editingRow = this.props.editingRow;
+          return editingRow === this.props.rootRecord ? (
+            <AutoComplete
+              style={{ width: "100%" }}
+              dataSource={this.state.spouseInfos}
+              placeholder="Spouse's info"
+              filterOption={(inputValue:any, option:any) =>
+                  option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              }
+              onSelect={this.onSelectSpouse}
+              value={this.state.spouse}
+              onChange={this.onChangeSelectSpouse}
+            />
+          ) : (
+              <div>{this.state.spouse}</div>
+          );
+        },
+      },
     ];
 
     const columns = columns_cus.map(col => {

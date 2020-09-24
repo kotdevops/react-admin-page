@@ -47,7 +47,7 @@ const LoaderWrapper = styled.div`
 
 // CSS ends
 
-const locales = {
+const locales:any = {
     "en": require('./locales/en-US.json'),
     "fr": require('./locales/fr-FR.json'),
 };
@@ -125,7 +125,7 @@ class App extends PureComponent<Props, State> {
         })
             .then((res) => {
                 const attendees = res.data;
-                console.log("attendees", attendees);
+                // console.log("attendees", attendees);
                 // this.props.setAttendees(attendees);
                 // this.setState({
                 //     isLoading: false
@@ -252,19 +252,26 @@ class App extends PureComponent<Props, State> {
     }
 
     async componentDidMount() {
+        // const drupalSettings:any = {
+        //     family_members: {
+        //         eventAccessCode: "390822",
+        //         language: "en",
+        //         isAnonymous: false
+        //     }
+        // }
         this.getXCSRFToken();
         /*global drupalSettings:true*/
         /*eslint no-undef: "error"*/
-        // // @ts-ignore
-        // alert("drupalSettings.family_members.eventAccessCode" + drupalSettings.family_members.eventAccessCode);
         // @ts-ignore
-        await this.props.setAuthStatus(false);//false//drupalSettings.isAnonymous
+        await this.props.setAuthStatus(drupalSettings.family_members.isAnonymous);//false//drupalSettings.family_members.isAnonymous
         // @ts-ignore
         await this.setState({eventCode: drupalSettings.family_members.eventAccessCode});
         // @ts-ignore
         await this.props.setEventCode(drupalSettings.family_members.eventAccessCode);//'039214'//drupalSettings.eventAccessCode//'390822'
         // @ts-ignore
-        await this.props.setLanguage(drupalSettings.family_members.language);//drupalSettings.language//'en'
+        await this.props.setLanguage(drupalSettings.family_members.language);//drupalSettings.family_members.language//'en'
+        // @ts-ignore
+        window.localStorage.setItem("cntLang", drupalSettings.family_members.language);
         await this.fetchEventTags();
         await this.fetchAttendees();
         await this.fetchMomentTags();
@@ -349,7 +356,7 @@ class App extends PureComponent<Props, State> {
                                 "birth": JSON.parse(data.data[v].relationships[0]).birth,
                                 "death": JSON.parse(data.data[v].relationships[0]).death,
                                 "email": JSON.parse(data.data[v].relationships[0]).email,
-                                "id": parentId,
+                                "id": parentId,                                
                             }
                             parents.push(parentItem);
                             break;
@@ -366,6 +373,7 @@ class App extends PureComponent<Props, State> {
                    "birth": JSON.parse(data.data[i].relationships[0]).birth,
                    "death": JSON.parse(data.data[i].relationships[0]).death,
                    "id": JSON.parse(data.data[i].relationships[0]).id,
+                   "spouse": (JSON.parse(data.data[i].relationships[0]).spouses.length) ? JSON.parse(data.data[i].relationships[0]).spouses[0].id : "",
                    "parent": parents,
                },
                "id": JSON.parse(data.data[i].relationships[0]).id,
@@ -409,7 +417,7 @@ class App extends PureComponent<Props, State> {
                 break;
             }
         }        
-        return this.state.eventCode.length ? ( 
+        return (
             <>
                 {this.state.isLoading || !this.state.initDone ?
                     <LoaderWrapper>
@@ -423,7 +431,7 @@ class App extends PureComponent<Props, State> {
                         </ConfigProvider>
                         :
                         <h2>Please log in to proceed</h2>}
-                <div style={{display: "none"}}>
+                {this.state.eventCode.length ? (<div style={{display: "none"}}>
                     <ReactiveBase
                         app="elasticsearch_index_bitnami_drupal8_attendee"
                         credentials="elastic:Uh44gjyJ78iGYMzMez0WJI7L"
@@ -454,9 +462,9 @@ class App extends PureComponent<Props, State> {
                             )}
                         />
                     </ReactiveBase>
-                </div>
+                </div>) : (<></>)}
             </>
-        ) : (<></>)
+        );
     }
 }
 
