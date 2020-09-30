@@ -135,8 +135,9 @@ export interface Attendee {
     lastName?: string;
     gender: string;
     email: string;
-    birth: string;
-    death: string;
+    birth: any;
+    id: string;
+    death: any;
     spouse: string;
     attendeeTags: EventTag[];
     parent: any[];
@@ -182,8 +183,8 @@ type State = Readonly<{
     submitFatherID: string;
     submitMotherID: string;
     submitSpouse: string;
-    newCreateBirth: string;
-    newCreaetDeath: string;
+    newCreateBirth: any;
+    newCreaetDeath: any;
     newCreateGender: string;
     newCreateSpouse: string;
     expandedRowKeys: any[];
@@ -218,6 +219,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 email: '',
                 gender: '',
                 birth: '',
+                id: '',
                 death: '',
                 spouse: '',
                 attendeeTags: [{
@@ -242,8 +244,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
             submitFatherID: '',
             submitMotherID: '',
             submitSpouse: '',
-            newCreateBirth: '',
-            newCreaetDeath: '',
+            newCreateBirth: null,
+            newCreaetDeath: null,
             newCreateSpouse: '',
             newCreateGender: 'M',
             expandedRowKeys: [],
@@ -417,18 +419,19 @@ class AttendeeComponent extends PureComponent<Props, State> {
     };
 
     save(form: any, key: any) {
-        
+        console.log("save, here! save: 420", form, key);
         this.setState({isLoading: true});
 
         form.validateFields((error: any, row: any) => {
             
             if (error) {
+                console.log("error in save", error, row);
                 return;
             }
             const newData = [...this.state.dataSource];
             const index = newData.findIndex(item => key === item.key);
             const attendeeID = this.props.data.attendees.data[key].id;
-            
+            console.log("createNewSave", index, newData, attendeeID, row);
             if (index > -1) {
                 const item = newData[index];
                 newData.splice(index, 1, {
@@ -456,7 +459,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
     }
 
     private createAttendeeNode = (title: string, firstName: string, lastName: string | undefined, userID: string, gender: string, birth: string, death: string): void => {
-        console.log("createAttendeeNode");
+        console.log("createAttendeeNode", birth, death);
         axios({
             method: 'post',
             url: `${prodURL}/jsonapi/node/attendee`,
@@ -505,6 +508,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     lastName: lastName,
                     email: title,
                     gender: gender,
+                    id: userID,
+                    spouse: "",
                     birth: birth,
                     death: death,
                     attendeeTags: [],
@@ -515,13 +520,15 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 data.push(newData);
                 this.setState({
                     createAttendeeMode: false,
-                    fullscreenLoading: false,
+                    // fullscreenLoading: false,
                     dataSource: data,
-                    editingRow: ''
+                    originDataSource: data,
+                    editingRow: '',
+                    expandedRowKeys: []
                 });
                 this.props.callMethod('fetchAttendees');
-                alert(firstName + "'s data was created newly!");
-                // window.location.reload();
+                // alert(firstName + "'s data was created newly!");
+                window.location.reload();
             })
             .catch(error => {          
                 let newData:any = {
@@ -530,6 +537,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     lastName: lastName,
                     email: title,
                     gender: gender,
+                    id: userID,
+                    spouse: "",
                     birth: birth,
                     death: death,
                     attendeeTags: [],
@@ -540,12 +549,15 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 data.push(newData);
                 this.setState({
                     createAttendeeMode: false,
-                    fullscreenLoading: false,
+                    // fullscreenLoading: false,
                     dataSource: data,
-                    editingRow: ''
+                    originDataSource: data,
+                    editingRow: '',
+                    expandedRowKeys: []
                 });
                 this.props.callMethod('fetchAttendees');
                 // alert("There is some error to create " + firstName + "'s data.")
+                window.location.reload();
             });
     };
 
@@ -553,7 +565,8 @@ class AttendeeComponent extends PureComponent<Props, State> {
         message.error(intl.get('EMAIL_IS_ALREADY_REGISTERED'));
     };
 
-    private createNewAttendee = (form: any, key: any): void => {        
+    private createNewAttendee = (form: any, key: any): void => {
+        console.log("save, here! createNewAttendee: 566", form, key);
         form.validateFields((error: any, row: any) => {
             console.log("createNew", key, row, this.state.newCreateBirth, this.state.newCreaetDeath, this.state.newCreateGender);
             // return;
@@ -710,6 +723,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
             birth: intl.get('#ENTER_BIRTH#'),
             death: intl.get('#DEATH#'),
             spouse: "",
+            id: "",
             attendeeTags: [],
             parent: [],
             createParentMode: false
@@ -900,20 +914,40 @@ class AttendeeComponent extends PureComponent<Props, State> {
     onDatePickerBirth = (date:any, dateString:any) => {
         let data = this.state.dataSource, index = parseInt(this.state.editingRow);
         if(index>-1) {
-            data[index].birth = dateString;
+            if(dateString) {
+                data[index].birth = (this.state.cntLang === "en") ? dateString.split("/")[2] + "-" + dateString.split("/")[0] + "-" + dateString.split("/")[1] : 
+                                                                    dateString.split("/")[2] + "-" + dateString.split("/")[1] + "-" + dateString.split("/")[0];
+            } else {
+                data[index].birth = null;
+            }            
             this.setState({dataSource:data});
         } else {
-            this.setState({newCreateBirth: dateString});
+            let dateBirth:any = null;
+            if(dateString) {
+                dateBirth = (this.state.cntLang === "en") ? dateString.split("/")[2] + "-" + dateString.split("/")[0] + "-" + dateString.split("/")[1] : 
+                                                            dateString.split("/")[2] + "-" + dateString.split("/")[1] + "-" + dateString.split("/")[0];
+            }       
+            this.setState({newCreateBirth: dateBirth});
         }
     }
 
     onDatePickerDeath = (date:any, dateString:any) => {
         let data = this.state.dataSource, index = parseInt(this.state.editingRow);
         if(index>-1) {
-            data[index].death = dateString;
+            if(dateString) {
+                data[index].death = (this.state.cntLang === "en") ? dateString.split("/")[2] + "-" + dateString.split("/")[0] + "-" + dateString.split("/")[1] : 
+                                                                    dateString.split("/")[2] + "-" + dateString.split("/")[1] + "-" + dateString.split("/")[0];
+            } else {
+                data[index].death = null;
+            }            
             this.setState({dataSource:data});
         } else {
-            this.setState({newCreaetDeath: dateString});
+            let dateDeath:any = null;
+            if(dateString) {
+                dateDeath = (this.state.cntLang === "en") ? dateString.split("/")[2] + "-" + dateString.split("/")[0] + "-" + dateString.split("/")[1] : 
+                                                            dateString.split("/")[2] + "-" + dateString.split("/")[1] + "-" + dateString.split("/")[0];
+            }    
+            this.setState({newCreaetDeath: dateDeath});
         }
     }
 
@@ -981,7 +1015,6 @@ class AttendeeComponent extends PureComponent<Props, State> {
                 render: (text, record) => {
                     const {editingRow} = this.state;
                     const editable = this.isEditing(record);
-
                     if (record.key === -1) {
                         return editable ?
                             (<span>
@@ -1105,6 +1138,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                             <DatePicker 
                                 onChange={this.onDatePickerBirth} 
                                 defaultValue={moment(`${text}`, 'YYYY-MM-DD')}
+                                format={(this.state.cntLang === "en") ? 'MM/DD/YYYY' : 'DD/MM/YYYY'}
                             />
                         ) : (
                             (this.state.cntLang === "en") ? (<div>{text.split("-")[1] + "/" + text.split("-")[2] + "/" + text.split("-")[0]}</div>) : 
@@ -1114,6 +1148,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     return editingRow === record.key ? (                        
                         <DatePicker 
                             onChange={this.onDatePickerBirth}
+                            format={(this.state.cntLang === "en") ? 'MM/DD/YYYY' : 'DD/MM/YYYY'}
                         />
                     ) : (
                         <div>{text}</div>
@@ -1141,6 +1176,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                             <DatePicker 
                                 onChange={this.onDatePickerDeath} 
                                 defaultValue={moment(`${text}`, 'YYYY-MM-DD')}
+                                format={(this.state.cntLang === "en") ? 'MM/DD/YYYY' : 'DD/MM/YYYY'}
                             />
                         ) : (
                             (this.state.cntLang === "en") ? (<div>{text.split("-")[1] + "/" + text.split("-")[2] + "/" + text.split("-")[0]}</div>) : 
@@ -1150,6 +1186,7 @@ class AttendeeComponent extends PureComponent<Props, State> {
                     return editingRow === record.key ? (
                         <DatePicker 
                             onChange={this.onDatePickerDeath}
+                            format={(this.state.cntLang === "en") ? 'MM/DD/YYYY' : 'DD/MM/YYYY'}
                         />
                     ) : (
                         <div>{text}</div>

@@ -8,6 +8,16 @@ import HeaderComponent from "./header-component";
 import intl from "react-intl-universal";
 
 //CSS starts
+// const Wrapper = styled.div`
+//   display: grid;
+//   margin: 15px;
+//      @media(min-width: 800px) {
+//       grid-template-columns: 1fr 4fr;
+//    }
+//     @media(min-width: 1400px) {
+//       grid-template-columns: 1fr 2fr 8fr 1fr;
+//    }
+// `;
 const Wrapper = styled.div`
   display: grid;
   margin: 15px;
@@ -15,7 +25,7 @@ const Wrapper = styled.div`
       grid-template-columns: 1fr 4fr;
    }
     @media(min-width: 1400px) {
-      grid-template-columns: 1fr 2fr 8fr 1fr;
+      grid-template-columns: 0.3fr 1.5fr 10fr 0.3fr;
    }
 `;
 const SidebarWrapper = styled.div`

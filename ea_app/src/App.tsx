@@ -254,7 +254,7 @@ class App extends PureComponent<Props, State> {
     async componentDidMount() {
         // const drupalSettings:any = {
         //     family_members: {
-        //         eventAccessCode: "390822",
+        //         eventAccessCode: "363747",
         //         language: "en",
         //         isAnonymous: false
         //     }
