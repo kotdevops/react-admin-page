@@ -125,11 +125,6 @@ class App extends PureComponent<Props, State> {
         })
             .then((res) => {
                 const attendees = res.data;
-                // console.log("attendees", attendees);
-                // this.props.setAttendees(attendees);
-                // this.setState({
-                //     isLoading: false
-                // });
             })
             .catch(catchError);
     };
@@ -151,7 +146,6 @@ class App extends PureComponent<Props, State> {
         })
             .then((res: any) => {
                 const eventTags = res.data.data;
-                // console.log("eventTags", eventTags);
                 this.props.setEventTags(eventTags);
             })
             .catch(catchError);
@@ -174,7 +168,6 @@ class App extends PureComponent<Props, State> {
         })
             .then((res: any) => {
                 const momentTags = res.data.data;
-                // console.log("momentTags", momentTags);
                 this.props.setMomentTags(momentTags);
             })
             .catch(catchError);
@@ -199,7 +192,6 @@ class App extends PureComponent<Props, State> {
                 const eventID = res.data.data[0].id;
                 const attendeeEventID = res.data.data[0].relationships.field_event_attendee_tags.data.id;
                 const momentEventID = res.data.data[0].relationships.field_event_moment_tags.data[0].id;
-                // console.log("eventID, attendeeEventID, momentEventID", eventID, attendeeEventID, momentEventID);
                 this.props.setParentEventData(eventID, attendeeEventID, momentEventID);
             })
             .catch(catchError);
@@ -232,15 +224,12 @@ class App extends PureComponent<Props, State> {
                         momentVocabularyID = vocabulary.id
                     }
                 });
-                // console.log("attendeeVocabularyID, momentVocabularyID", attendeeVocabularyID, momentVocabularyID);
                 this.props.setTagTaxonomyVocabularies(attendeeVocabularyID, momentVocabularyID)
             })
             .catch(catchError);
     };
 
     loadLocales() {
-        // init method will load CLDR locale data according to currentLocale
-        // react-intl-universal is singleton, so you should init it only once in your app
         intl.init({
             currentLocale: this.props.data.language,
             locales,
@@ -252,13 +241,13 @@ class App extends PureComponent<Props, State> {
     }
 
     async componentDidMount() {
-        // const drupalSettings:any = {
-        //     family_members: {
-        //         eventAccessCode: "390822",
-        //         language: "en",
-        //         isAnonymous: false
-        //     }
-        // }
+        const drupalSettings:any = {
+            family_members: {
+                eventAccessCode: "390822",
+                language: "en",
+                isAnonymous: false
+            }
+        }
         this.getXCSRFToken();
         /*global drupalSettings:true*/
         /*eslint no-undef: "error"*/
