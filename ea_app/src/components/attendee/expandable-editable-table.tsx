@@ -93,6 +93,15 @@ const mapStateToProps = ({data, view}: RootState): { data: DataState, view: View
 
 type Props = OwnProps & ReturnType<typeof mapStateToProps>;
 
+<<<<<<< HEAD
+=======
+// interface OwnProps {
+//   propsData: any[];
+// }
+
+// type Props = OwnProps & FormComponentProps;
+
+>>>>>>> c870f04af0eb40bc85d81a628290492870081c5c
 type State = Readonly<{
   data: any[];
   editingKey: string;
@@ -365,6 +374,19 @@ class EditableTable extends PureComponent<Props, State> {
 
     const columns_cus:any[] = [
       {
+<<<<<<< HEAD
+=======
+        // title: () => {
+        //   return (
+        //       <Icon 
+        //           type="usergroup-add" 
+        //           theme="outlined" 
+        //           onClick={()=>this.addParentItem()}
+        //           style={{fontSize: '22px', color: 'rgba(176,31,95,1)'}}
+        //       />
+        //   )
+        // },
+>>>>>>> c870f04af0eb40bc85d81a628290492870081c5c
         title: "",
         dataIndex: 'operation',
         render: (text:any, record:any) => {

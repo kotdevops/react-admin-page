@@ -22,10 +22,21 @@ import styled from "styled-components";
 import intl from "react-intl-universal";
 import moment from 'moment';
 
+<<<<<<< HEAD
 import EditableFormTable from './dropdown-paremt-item';
 // import { RestaurantRounded } from '@material-ui/icons';
 // import { StringGradients } from 'antd/lib/progress/progress';
 // import { update } from 'lodash';
+=======
+// import SearchBar from "material-ui-search-bar";
+// import { filter } from 'lodash';
+
+// import EditableFormTable from './expandable-editable-table';
+import EditableFormTable from './dropdown-paremt-item';
+import { RestaurantRounded } from '@material-ui/icons';
+import { StringGradients } from 'antd/lib/progress/progress';
+import { update } from 'lodash';
+>>>>>>> c870f04af0eb40bc85d81a628290492870081c5c
 
 const { Option } = Select;
 
