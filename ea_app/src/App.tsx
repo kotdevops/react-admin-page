@@ -125,11 +125,14 @@ class App extends PureComponent<Props, State> {
         })
             .then((res) => {
                 const attendees = res.data;
+<<<<<<< HEAD
+=======
                 // console.log("attendees", attendees);
                 // this.props.setAttendees(attendees);
                 // this.setState({
                 //     isLoading: false
                 // });
+>>>>>>> c870f04af0eb40bc85d81a628290492870081c5c
             })
             .catch(catchError);
     };
@@ -199,7 +202,10 @@ class App extends PureComponent<Props, State> {
                 const eventID = res.data.data[0].id;
                 const attendeeEventID = res.data.data[0].relationships.field_event_attendee_tags.data.id;
                 const momentEventID = res.data.data[0].relationships.field_event_moment_tags.data[0].id;
+<<<<<<< HEAD
+=======
                 // console.log("eventID, attendeeEventID, momentEventID", eventID, attendeeEventID, momentEventID);
+>>>>>>> c870f04af0eb40bc85d81a628290492870081c5c
                 this.props.setParentEventData(eventID, attendeeEventID, momentEventID);
             })
             .catch(catchError);
@@ -239,8 +245,6 @@ class App extends PureComponent<Props, State> {
     };
 
     loadLocales() {
-        // init method will load CLDR locale data according to currentLocale
-        // react-intl-universal is singleton, so you should init it only once in your app
         intl.init({
             currentLocale: this.props.data.language,
             locales,
@@ -252,6 +256,15 @@ class App extends PureComponent<Props, State> {
     }
 
     async componentDidMount() {
+<<<<<<< HEAD
+        const drupalSettings:any = {
+            family_members: {
+                eventAccessCode: "390822",
+                language: "en",
+                isAnonymous: false
+            }
+        }
+=======
         // const drupalSettings:any = {
         //     family_members: {
         //         eventAccessCode: "390822",
@@ -259,6 +272,7 @@ class App extends PureComponent<Props, State> {
         //         isAnonymous: false
         //     }
         // }
+>>>>>>> c870f04af0eb40bc85d81a628290492870081c5c
         this.getXCSRFToken();
         /*global drupalSettings:true*/
         /*eslint no-undef: "error"*/
@@ -266,11 +280,19 @@ class App extends PureComponent<Props, State> {
         await this.props.setAuthStatus(drupalSettings.family_members.isAnonymous);//false//drupalSettings.family_members.isAnonymous
         // @ts-ignore
         await this.setState({eventCode: drupalSettings.family_members.eventAccessCode});
+<<<<<<< HEAD
         // @ts-ignore
         await this.props.setEventCode(drupalSettings.family_members.eventAccessCode);//'039214'//drupalSettings.eventAccessCode//'390822'
         // @ts-ignore
         await this.props.setLanguage(drupalSettings.family_members.language);//drupalSettings.family_members.language//'en'
         // @ts-ignore
+=======
+        // @ts-ignore
+        await this.props.setEventCode(drupalSettings.family_members.eventAccessCode);//'039214'//drupalSettings.eventAccessCode//'390822'
+        // @ts-ignore
+        await this.props.setLanguage(drupalSettings.family_members.language);//drupalSettings.family_members.language//'en'
+        // @ts-ignore
+>>>>>>> c870f04af0eb40bc85d81a628290492870081c5c
         window.localStorage.setItem("cntLang", drupalSettings.family_members.language);
         await this.fetchEventTags();
         await this.fetchAttendees();

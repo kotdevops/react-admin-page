@@ -6,7 +6,6 @@ export interface ViewActions {
     type: ViewActionTypes.TOGGLE_DRAWER | ViewActionTypes.CALL_METHOD
     payload: any;
 }
-
 // Open/close tags drawer
 export const toggleDrawer = (drawerStatus: boolean, record: Attendee) => (dispatch: Dispatch) => {
     dispatch<ViewActions>({

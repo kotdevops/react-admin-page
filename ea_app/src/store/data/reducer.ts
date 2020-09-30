@@ -5,7 +5,6 @@ interface FieldAttendeeTagsData {
     type: string;
     id: string;
 }
-
 interface Data {
     id: string;
     attributes: {
@@ -22,27 +21,22 @@ interface Data {
         }
     }
 }
-
 interface Included {
     attributes: {
         name: string;
     };
     id: string
 }
-
 export interface AttendeeData {
     data: Data[];
     included: Included[];
 }
-
 export interface EventTags {
     attributes: {
         name: string
     };
     id: string;
 }
-
-
 export interface DataState {
     eventCode: string;
     language: string;
@@ -61,7 +55,6 @@ export interface DataState {
         momentVocabularyID: string
     };
 }
-
 export const initialState: DataState = {
     eventCode: 'empty',
     language: 'empty',
@@ -116,7 +109,6 @@ export const initialState: DataState = {
         momentVocabularyID: 'empty'
     }
 };
-
 export function dataReducer(
     state = initialState,
     action: DataActions
